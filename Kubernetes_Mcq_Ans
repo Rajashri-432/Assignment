@@ -1,0 +1,103 @@
+Kubernetes MCQ Answers
+
+1. What is Kubernetes primarily used for?
+B. Container orchestration
+2. Which organization originally developed Kubernetes?
+C. Google
+3. What is the smallest deployable unit in Kubernetes?
+B. Pod
+4. Which component manages the Kubernetes cluster?
+C. Control Plane
+5. Which command displays cluster information?
+A. kubectl cluster-info
+6. What is a Pod?
+B. A collection of one or more containers
+7. Which command lists all Pods in the current namespace?
+B. kubectl get pods
+8. What is a Node in Kubernetes?
+B. A physical or virtual machine running workloads
+9. Which component schedules Pods onto Nodes?
+C. Scheduler
+10. What is etcd?
+B. A distributed key-value store
+11. Which command creates resources from a YAML file?
+A. kubectl create -f
+12. What is the purpose of a Deployment?
+B. Manage stateless application replicas
+13. Which command displays details about a Pod?
+C. kubectl describe pod
+14. What is a ReplicaSet responsible for?
+B. Maintaining a specified number of Pod replicas
+15. Which command deletes a Pod?
+B. kubectl delete pod
+16. What is a Namespace used for?
+B. Resource isolation within a cluster
+17. Which command lists all namespaces?
+A. kubectl get ns
+18. What is a Service in Kubernetes?
+B. A method to expose applications
+19. Which Service type exposes applications internally within the cluster?
+D. ClusterIP
+20. Which Service type exposes an application on a port of every Node?
+B. NodePort
+21. What is the default Service type?
+A. ClusterIP
+22. What is kubelet?
+B. Node agent running on each worker node
+23. Which component manages network rules on nodes?
+A. kube-proxy
+24. What is the purpose of ConfigMaps?
+B. Store non-confidential configuration data
+25. What is the purpose of Secrets?
+A. Store encrypted configuration and sensitive data
+26. Which command displays logs from a Pod?
+B. kubectl logs
+27. What is Ingress used for?
+B. External HTTP/HTTPS routing
+28. Which resource manages external access to services?
+C. Ingress
+29. What is a StatefulSet primarily used for?
+B. Applications requiring stable identity and storage
+30. What is a DaemonSet?
+A. Ensures a Pod runs on every node
+31. What is a Job in Kubernetes?
+B. Task that runs to completion
+32. What is a CronJob?
+A. Repeated scheduled Job
+33. Which command applies configuration changes declaratively?
+C. kubectl apply
+34. What file format is commonly used for Kubernetes manifests?
+C. YAML
+35. Which command retrieves all resources in a namespace?
+A. kubectl get all
+36. What is Horizontal Pod Autoscaler (HPA)?
+B. Automatically scales Pods based on metrics
+37. What is Vertical Pod Autoscaler (VPA)?
+B. Adjusts CPU and memory requests/limits
+38. What is a Persistent Volume (PV)?
+B. Cluster storage resource
+39. What is a Persistent Volume Claim (PVC)?
+A. Request for storage by a user/application
+40. Which command starts an interactive shell inside a Pod?
+B. kubectl exec
+41. What is the Kubernetes API Server responsible for?
+B. Serving the Kubernetes API
+42. Which resource controls incoming and outgoing network traffic for Pods?
+B. NetworkPolicy
+43. What is a ServiceAccount used for?
+B. Providing identity for processes running in Pods
+44. Which command displays the current Kubernetes context?
+B. kubectl config current-context
+45. What is a Taint used for?
+B. Prevent Pods from scheduling on specific nodes unless tolerated
+46. What is a Toleration?
+A. Allows Pods to be scheduled on tainted nodes
+47. What is a Helm Chart?
+B. Package format for Kubernetes applications
+48. What is the primary purpose of RBAC?
+B. Role-Based Access Control
+49. What is the purpose of the kubectl rollout command?
+A. Manage deployment updates and rollbacks
+50. Which Kubernetes object is commonly used for rolling updates of applications?
+B. Deployment
+
