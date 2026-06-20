@@ -1,0 +1,489 @@
+Docker – Practical Scenario Answers
+
+1) Docker container works on laptop but fails in CI/CD pipeline. How would you debug this?
+I would debug it in a structured way:
+
+1. Compare environments
+- Check Docker version, base image, OS, CPU architecture, environment variables, mounted files, secrets, and network access in local vs CI.
+- Verify if CI is using the same Dockerfile and build context.
+
+2. Inspect build logs
+- Look for dependency installation failures, missing files, permission issues, or caching problems.
+- Run build with verbose logs and without cache if needed:
+  docker build --no-cache .
+
+3. Run the same image locally
+- Pull the CI-built image and run it locally to confirm whether issue is image-related or CI-environment-related.
+
+4. Check runtime config
+- Validate env vars, secrets, port mappings, working directory, entrypoint, CMD, and file paths.
+
+5. Look for hidden dependency on local machine
+- Sometimes local works because of local volumes, preinstalled tools, cached packages, or .env files not present in CI.
+
+6. Reproduce CI conditions
+- Run the container in a clean environment similar to CI to isolate the issue.
+
+Typical root causes: missing env vars, wrong file paths, dependency mismatch, architecture mismatch, permission issue, or hidden local dependency.
+
+2) Docker image size suddenly increases from 500MB to 5GB. What steps will you take?
+I would investigate layer by layer:
+
+1. Check image history
+docker history <image>
+This shows which layer became large.
+
+2. Compare recent Dockerfile changes
+- Look for copied datasets, logs, model files, package caches, build artifacts, or unnecessary dependencies.
+
+3. Check .dockerignore
+- Make sure large files like .git, logs, datasets, checkpoints, virtual environments, node_modules, etc. are not being copied.
+
+4. Inspect COPY/ADD instructions
+- A broad COPY . . often pulls unwanted files into the image.
+
+5. Review package installation
+- Installing build tools, compilers, large ML libraries, or OS packages can increase size heavily.
+
+6. Use multi-stage builds
+- Keep only runtime artifacts in final image.
+
+7. Clean package caches
+Example:
+RUN apt-get update && apt-get install -y ... && rm -rf /var/lib/apt/lists/*
+
+8. Use slimmer base images
+- Example: python:slim, alpine where appropriate.
+
+3) Application runs inside Docker but cannot connect to an external database. How would you troubleshoot it?
+I’d troubleshoot in layers:
+
+1. Verify DB endpoint, port, username, password
+- Confirm env vars are correctly passed into the container.
+
+2. Check network connectivity from inside container
+docker exec -it <container> sh
+ping <db-host>
+nc -zv <db-host> 5432
+
+3. Check firewall / security rules
+- DB may allow only certain IPs or VPC/subnet ranges.
+
+4. Check DNS resolution
+- Sometimes container cannot resolve hostname.
+
+5. Validate database is listening externally
+- DB may only listen on localhost.
+
+6. Check SSL / TLS requirements
+- Some databases require SSL parameters.
+
+7. Check application logs
+- Distinguish timeout vs authentication failure vs DNS failure.
+
+8. If in Kubernetes/CI
+- Also check network policies, service config, and secret injection.
+
+4) A container exits immediately after starting. How do you find the root cause?
+My approach:
+
+1. Check container logs
+docker logs <container>
+
+2. Inspect exit code
+docker ps -a
+docker inspect <container>
+
+3. Validate ENTRYPOINT/CMD
+- Often container exits because the main process finished or command is incorrect.
+
+4. Run interactively
+docker run -it --entrypoint sh <image>
+Then manually run the application.
+
+5. Check missing dependencies/config
+- Missing env vars, missing files, permission issues, bad startup script.
+
+6. Confirm foreground process exists
+- Containers stop when PID 1 exits.
+
+Common reasons: wrong command, startup script failure, application crash, missing env vars, config issue.
+
+5) You need to deploy an ML model with GPU support inside Docker. What challenges will you face and how will you solve them?
+Main challenges:
+- GPU drivers must exist on the host
+- Docker container must access GPU runtime
+- CUDA / cuDNN versions must match framework requirements
+- Large image size because of ML dependencies
+- Need to verify model actually uses GPU
+
+Solution:
+1. Install NVIDIA drivers on host
+2. Install NVIDIA Container Toolkit
+3. Use a CUDA-compatible base image
+4. Run container with GPU access:
+docker run --gpus all <image>
+5. Match framework version with CUDA version
+6. Validate inside container:
+nvidia-smi
+python -c "import torch; print(torch.cuda.is_available())"
+7. Keep runtime image lean using multi-stage builds if possible
+
+6) Your Docker build is taking too long in production pipelines. How would you optimize it?
+I would optimize build time by focusing on cache efficiency, smaller context, and parallelism.
+
+Steps:
+1. Optimize Dockerfile layer order
+- Put rarely changing layers first
+- Example: install dependencies before copying frequently changing app code
+
+2. Use .dockerignore
+- Exclude logs, git, node_modules, data, model artifacts, venv, etc.
+
+3. Leverage Docker cache
+Example for Python:
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+so dependency layer is cached.
+
+4. Use smaller base images
+5. Use multi-stage builds
+6. Avoid unnecessary packages
+7. Pre-build common base images
+8. Use BuildKit / remote cache in CI
+9. Parallelize pipeline stages where possible
+
+7) Container works locally but fails in Kubernetes deployment. How would you isolate whether issue is Docker-related or cluster-related?
+I’d isolate systematically:
+
+1. Run the exact same image outside Kubernetes
+- If it fails outside K8s too → Docker/app issue
+- If it works outside K8s → likely K8s config/runtime issue
+
+2. Check pod logs
+kubectl logs <pod>
+
+3. Describe pod
+kubectl describe pod <pod>
+Look for image pull errors, probe failures, env var issues, scheduling problems.
+
+4. Compare runtime config
+- Ports, env vars, mounted volumes, secrets, resource limits, command/args.
+
+5. Exec into pod if it starts
+kubectl exec -it <pod> -- sh
+
+6. Check Kubernetes-specific factors
+- Readiness/liveness probes
+- ConfigMaps/Secrets
+- ServiceAccount/RBAC
+- NetworkPolicy
+- PVC mounts
+- Resource limits
+
+Kubernetes – Practical Scenario Answers
+
+1) A pod is stuck in CrashLoopBackOff. How would you debug and resolve it?
+My approach:
+
+1. Check pod logs
+kubectl logs <pod> --previous
+
+2. Describe the pod
+kubectl describe pod <pod>
+Look for probe failures, OOMKilled, bad image, mount failures, env var issues.
+
+3. Verify container startup command
+- Wrong command or missing file often causes repeated crashes.
+
+4. Check ConfigMaps/Secrets
+- Missing configs or bad values are common causes.
+
+5. Check resource limits
+- Pod may be crashing due to low memory/CPU.
+
+6. If needed, run a debug pod with same image to inspect manually.
+
+2) Your application is running but not reachable from outside the cluster. What steps will you take?
+I would validate the full traffic path:
+
+1. Check pod is healthy and listening on expected port
+2. Check Service configuration
+kubectl get svc
+- Verify selector, targetPort, port, and service type
+
+3. Check Endpoints
+kubectl get endpoints <service>
+- If endpoints are empty, service is not targeting pods correctly
+
+4. If using Ingress
+- Verify ingress rules, host/path mapping, ingress controller health
+
+5. Test from inside cluster first
+kubectl exec -it <pod> -- curl <service-name>:<port>
+
+6. Check firewall / security groups / load balancer exposure
+
+3) One of your services is randomly becoming slow under load. How would you investigate the issue?
+I’d investigate from application, pod, and cluster levels:
+
+1. Check CPU/memory usage
+kubectl top pod
+kubectl top node
+
+2. Review app logs and latency metrics
+- Look for slow DB calls, retries, timeouts, thread exhaustion.
+
+3. Check if HPA is scaling correctly
+4. Check resource throttling due to CPU limits
+5. Verify readiness/liveness probes aren’t causing disruption
+6. Inspect network latency and dependent services
+7. Check node pressure or noisy neighbor issues
+
+4) You deployed 3 replicas, but only 1 is receiving traffic. What could be wrong?
+Possible reasons:
+1. Service selector may match only one pod
+2. Other pods may not be Ready
+3. Readiness probes may be failing on two pods
+4. Session stickiness / client-side caching / ingress config issue
+5. Only one pod may have correct labels
+6. Endpoint list may contain only one pod
+
+I would verify:
+kubectl get pods -o wide
+kubectl describe svc <service>
+kubectl get endpoints <service>
+
+5) Your Kubernetes cluster is running out of CPU/memory. How do you identify and fix the issue?
+I’d approach it in two phases: identify top consumers, then optimize.
+
+1. Identify high-usage nodes and pods
+kubectl top nodes
+kubectl top pods -A
+
+2. Check requests/limits
+- Some workloads may have no limits or oversized requests.
+
+3. Find memory leaks or runaway jobs
+4. Check autoscaling status
+- HPA for pods, cluster autoscaler for nodes
+
+5. Remove unused workloads / completed jobs
+6. Tune resource requests and limits properly
+7. Scale cluster if demand is genuine
+
+6) A pod keeps getting terminated due to OOMKilled. How would you resolve it?
+OOMKilled means the container exceeded memory limit.
+
+Steps:
+1. Confirm with:
+kubectl describe pod <pod>
+
+2. Check actual memory usage trend
+3. Increase memory limit if genuinely required
+4. Tune JVM/Python/app memory settings if applicable
+5. Fix memory leak if present
+6. Reduce in-memory batch size / model size / cache usage
+7. Set realistic requests and limits
+
+7) Your deployment update caused downtime. How would you design the rollout to avoid this in the future?
+To avoid downtime, I would use a safe rollout strategy:
+
+1. Use RollingUpdate strategy
+2. Configure:
+- maxUnavailable: 0
+- maxSurge: 1 or more
+3. Add readiness probes so traffic goes only to healthy pods
+4. Add liveness probes carefully
+5. Use PodDisruptionBudget for minimum availability
+6. Validate in staging first
+7. Use canary/blue-green deployment for critical services
+8. Keep rollback command ready:
+kubectl rollout undo deployment/<name>
+
+8) You need to run an ML workload that requires GPUs. How would you configure Kubernetes for it?
+I would set up GPU support as follows:
+
+1. GPU-enabled worker nodes
+2. Install NVIDIA drivers on nodes
+3. Install NVIDIA device plugin in cluster
+4. Request GPU in pod spec:
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
+5. Use CUDA-compatible container image
+6. Schedule workload only on GPU nodes using nodeSelector/taints/tolerations if needed
+7. Verify inside pod with nvidia-smi
+
+MLflow – Practical Scenario Answers
+
+1) You trained a model but cannot reproduce the same accuracy later. How would MLflow help you debug this?
+MLflow helps by tracking everything needed for reproducibility:
+
+1. Compare runs in MLflow UI
+2. Check parameters, metrics, code version, artifacts, model version, and tags
+3. Verify dataset version and preprocessing details
+4. Check random seed and environment dependencies
+5. Compare training runs side by side to identify what changed
+
+2) Multiple team members are training models, and results are getting mixed up. How would you organize this using MLflow?
+I would structure MLflow clearly:
+
+1. Separate experiments by project/use case/environment
+2. Use naming conventions for runs
+3. Add tags like owner, dataset version, model type, branch, environment
+4. Store artifacts per run
+5. Use Model Registry for approved models only
+6. Restrict who can promote models to staging/production
+
+3) A model performed well in training but poorly in production. How would you investigate using MLflow logs?
+I would compare training and production context:
+
+1. Check training metrics vs production metrics
+2. Verify model version deployed in production
+3. Compare training data distribution vs production input data
+4. Review preprocessing artifacts and feature pipeline
+5. Check parameters, thresholds, and environment mismatch
+6. Use MLflow artifacts/logs to inspect model signature and dependencies
+
+4) Your MLflow experiment logs are incomplete. What could be the reasons and how will you fix them?
+Possible reasons:
+1. Logging code not executed fully
+2. Run closed unexpectedly due to crash
+3. Nested runs misused
+4. Wrong tracking URI or backend store issue
+5. Artifact store permission issue
+6. Logging outside active MLflow run
+7. Network/storage failure
+
+Fix:
+- Ensure mlflow.start_run() / end_run() are handled properly
+- Add try/finally for safe logging
+- Validate backend/artifact store connectivity
+- Standardize logging in training pipeline
+
+5) You need to compare 50 different experiments. How would you efficiently do this in MLflow?
+I would:
+1. Use MLflow experiment UI filtering and sorting
+2. Compare runs side by side on metrics/parameters
+3. Use tags to group by dataset/model/team
+4. Export runs programmatically using MLflow client if deeper analysis is needed
+5. Promote only shortlisted best runs to Model Registry
+
+6) A model is ready for production deployment. How would you use MLflow Model Registry to manage it?
+I would use Model Registry as the control point:
+
+1. Register the trained model
+2. Add version notes, tags, and metadata
+3. Move it through stages such as Staging → Production
+4. Keep approval/review process before production promotion
+5. Maintain previous stable version for rollback
+6. Link model version with experiment run, metrics, and artifacts
+
+7) Your MLflow artifacts are taking too much storage. How would you optimize storage usage?
+I would optimize by:
+1. Logging only useful artifacts
+2. Avoid storing duplicate large models/checkpoints unnecessarily
+3. Compress artifacts where possible
+4. Set retention/cleanup policy for old runs
+5. Store artifacts in scalable object storage like S3/MinIO
+6. Archive or delete failed/temporary experiment outputs if policy allows
+
+8) How would you integrate MLflow with Kubernetes for automated model deployment?
+High-level flow:
+1. Train model and log to MLflow
+2. Register approved model in Model Registry
+3. CI/CD pipeline detects new Production model version
+4. Build inference Docker image using that model
+5. Push image to registry
+6. Deploy/update Kubernetes Deployment
+7. Use rollout strategy, monitoring, and rollback support
+
+Combined System Design Scenarios
+
+1) You are asked to build an end-to-end ML system. How would you combine Docker, Kubernetes, and MLflow?
+I would design it like this:
+
+1. Training pipeline
+- Train model in Dockerized jobs
+- Log params, metrics, artifacts, and model to MLflow
+
+2. Model management
+- Use MLflow Model Registry for versioning and stage transitions
+
+3. Packaging
+- Package inference app + model into Docker image
+
+4. Deployment
+- Deploy inference service on Kubernetes
+- Use Deployment, Service, Ingress, HPA
+
+5. Storage and observability
+- Store artifacts in object storage
+- Use Prometheus/Grafana/logging for monitoring
+
+So:
+MLflow = experiment tracking + registry
+Docker = reproducible packaging
+Kubernetes = scalable deployment and operations
+
+2) A model works in MLflow but fails after Dockerization. How would you debug the pipeline?
+I would check:
+
+1. Whether the same model artifact/version is packaged
+2. Dependency mismatch between training and inference image
+3. Missing preprocessing code or tokenizer/artifacts
+4. Wrong model path inside container
+5. Entry point / API startup failure
+6. CPU vs GPU dependency mismatch
+7. Test locally with the same Docker image before deploying
+
+3) How would you design a system that supports retraining, versioning, and auto-deployment of ML models?
+Design:
+1. Scheduled or event-driven retraining pipeline
+2. Training job logs everything to MLflow
+3. Best model gets registered in Model Registry
+4. Approval or automated validation gate
+5. CI/CD builds serving image with selected model version
+6. Kubernetes deploys updated version gradually
+7. Monitoring checks production performance
+8. If performance drops, rollback to previous model version
+
+4) How do you ensure reproducibility from training (MLflow) to deployment (Docker + Kubernetes)?
+I ensure reproducibility by versioning all critical pieces:
+1. Code version / Git commit
+2. Dataset version
+3. Parameters and random seed
+4. Docker image version
+5. Model artifact version in MLflow
+6. Kubernetes manifest / Helm chart version
+7. Environment dependencies and config
+
+That way I can trace exactly:
+training run → model version → Docker image → Kubernetes deployment.
+
+5) Your system needs to handle sudden traffic spikes while serving ML predictions. How would you design it?
+I would design for elasticity and resilience:
+
+1. Containerized inference service
+2. Kubernetes Deployment with multiple replicas
+3. HPA based on CPU/memory/custom metrics like request rate or latency
+4. Load balancing via Service/Ingress
+5. Fast startup and readiness checks
+6. Optional GPU node pool if model needs acceleration
+7. Caching/batching if suitable
+8. Observability for latency, errors, and saturation
+
+6) How would you implement rollback if a newly deployed ML model performs poorly in production?
+I would keep rollback at both model and deployment levels:
+
+1. Keep previous stable model version in MLflow Model Registry
+2. Keep previous stable Docker image tag
+3. Use Kubernetes rollout history / rollout undo
+4. Monitor business + technical metrics after release
+5. If degradation is detected:
+- rollback deployment to previous image
+- or redeploy service using previous approved model version
+6. Prefer canary deployment so only small traffic is affected first
