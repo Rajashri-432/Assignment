@@ -1,0 +1,205 @@
+Answers (1–50):
+
+1) Problem: “Works on laptop but fails on QA” is a dependency/version mismatch — different Python package versions (or transitive deps) produce different behavior. Environment drift causes incompatibilities.
+   How Docker solves it: Docker packages the app plus its OS-level runtime and exact dependencies into an image. The same image runs everywhere (developer laptop, QA, CI, prod), eliminating host-level dependency/version drift.
+
+2) Run Node.js + PostgreSQL + Redis together: define each service in a single docker-compose.yml (or Kubernetes manifests) and start them together so they share a network and stable hostnames.
+   Which Docker tool: Docker Compose (v2) for local/multi-service orchestration. For production use at scale, use Kubernetes (k8s) instead.
+
+3) Reduce Docker image size techniques:
+   - Use multi-stage builds to keep build tooling out of final image.
+   - Choose smaller base images (alpine, distroless, slim variants) where appropriate.
+   - Remove build-time and dev dependencies; install only runtime packages.
+   - Combine RUN steps and clean caches (apt-get clean, rm -rf /var/lib/apt/lists/*).
+   - Use .dockerignore to exclude build artifacts and VCS.
+   - Minimize included files/artifacts (copy only what’s needed).
+   - Use language-specific optimizations (pip install --no-cache-dir, use wheels).
+   - Use image-layer pruning and smaller language runtimes (e.g., use python:3.11-slim instead of full).
+
+4) Troubleshoot a container that crashes on start — Docker commands:
+   - docker ps -a (see exited containers)
+   - docker logs <container> (view stdout/stderr)
+   - docker inspect <container> (low-level details, error codes, mount info)
+   - docker events (real-time events)
+   - docker run --rm -it --entrypoint /bin/sh <image> (start an interactive shell to reproduce/fix)
+   - docker exec -it <container> /bin/sh (if it’s running briefly)
+   - docker stats (resource usage)
+   Also check docker-compose logs or check image healthcheck/entrypoint and resource limits.
+
+5) Persist data across container deletion: use volumes. Design: store application data on Docker named volumes or bind mounts (host path) for local/dev; in production use managed storage (block or file) mounted into containers. For orchestrators, use Kubernetes PersistentVolumes + PersistentVolumeClaims with an appropriate StorageClass so PVs survive Pod deletion.
+
+6) Multiple environments consistency: Docker ensures the same container image is run in dev/test/prod. Use the same image builds and different configuration via environment variables, secrets, and configuration files (or separate Compose/Helm values) to maintain consistency while varying only environment-specific settings.
+
+7) Inter-container communication: Docker user-defined networks give automatic DNS-based service discovery; containers can refer to each other by service/container name. In Compose, services are reachable by service name. Expose ports as needed but keep internal traffic on the network.
+
+8) Reduce onboarding time for new devs: provide a docker-compose.yml (or dev container config) that spins up the full stack with one command. New developers don’t need to install language runtimes or DBs locally — they get the working environment from images and shared config.
+
+9) Identical deployments across AWS/Azure/local: Docker images bundle the runtime and app, producing a consistent artifact. Pushing the same container image to a registry and running it on different platforms leads to identical runtime behavior regardless of underlying cloud OS variants.
+
+10) Deleted a running container:
+   - What happens to the data? If data was stored only on the container’s writable layer (ephemeral), it is lost. If data was on a Docker named volume or bind mount, it persists.
+   - How to have prevented loss: use Docker volumes (named volumes) or bind mounts for persistence; back up volumes; use remote/managed storage; in k8s use PersistentVolumes/PVCs and backup snapshots.
+
+11) Single container app and traffic growth:
+   - Why Docker alone is insufficient: Docker provides packaging but not orchestration — no automatic scaling, load balancing, service discovery, self-healing, or scheduling across nodes.
+   - How Kubernetes helps: k8s provides scaling (ReplicaSets, Deployments, HPA), load balancing (Services, Ingress), rolling updates, health checks, and scheduling across nodes so the app can serve many more users reliably.
+
+12) One node in cluster crashes:
+   - What happens to running Pods? Pods on that node become NotReady/Unknown — they stop running. The API server marks them failed after node controller timeout.
+   - How Kubernetes recovers: the control plane notices the node is down and the controllers (ReplicaSet/Deployment/StatefulSet/DaemonSet) create new Pods on other available nodes to maintain desired state. Persistent data is recovered if using network-backed PersistentVolumes; ephemeral Pod-local data is lost.
+
+13) Ensure 5 replicas running at all times: use a Deployment (or ReplicaSet) with replicas: 5. Deployment is preferred for upgrades and rollbacks.
+
+14) CPU spikes during office hours — auto-scale:
+   - Use Horizontal Pod Autoscaler (HPA) to scale replicas automatically based on CPU utilization or custom metrics.
+   - Optionally combine with Cluster Autoscaler to increase node count when Pod scheduling needs more resources.
+
+15) Make app accessible from the internet:
+   - Use LoadBalancer for cloud environments where each Service gets a cloud load balancer (recommended).
+   - NodePort is for simple external exposure (opens port on every node) — less convenient in clouds.
+   - ClusterIP is internal-only. So choose LoadBalancer (or Ingress in front of a ClusterIP service) for production internet accessibility.
+
+16) Database Pod restarts and loses all data: use StatefulSet (if you need stable network/identity) plus PersistentVolumes + PersistentVolumeClaims and an appropriate StorageClass. Don’t rely on ephemeral volumes; use PVC-backed storage that survives Pod restarts and rescheduling.
+
+17) Remove passwords from YAML files: use Kubernetes Secrets to store sensitive data (or external secrets managers like AWS Secrets Manager, HashiCorp Vault). Mount as env vars or files into Pods; restrict access via RBAC.
+
+18) Logging agent on every node: use a DaemonSet (e.g., Fluentd/Fluent Bit/Vector) so one pod runs per node and collects logs.
+
+19) Deploy new version without downtime: use RollingUpdate deployment strategy (default Deployment) with readiness probes to ensure new Pods are ready before removing old ones. Alternatively use blue-green or canary deployments (via tools like Argo Rollouts or manual pipelines).
+
+20) Pod stuck in CrashLoopBackOff — troubleshooting steps:
+   - kubectl describe pod <pod> (see events)
+   - kubectl logs <pod> --previous (view logs from previous attempts)
+   - kubectl logs <pod> (if it runs long enough)
+   - Check liveness/readiness probes and startupProbe for misconfiguration.
+   - Inspect resource requests/limits — OOMKilled or insufficient CPU/memory.
+   - Validate env vars, ConfigMaps, Secrets, volume mounts, and entrypoint/command.
+   - Run the container image interactively (kubectl run or docker run) to reproduce locally.
+
+21) Restrict workloads to GPU nodes:
+   - Use node labels + nodeSelector or nodeAffinity to schedule only onto labelled GPU nodes.
+   - Use taints on GPU nodes and add tolerations to Pods that should run there.
+   - Install device plugin (e.g., NVIDIA device plugin) and request resources like resources.limits: nvidia.com/gpu: 1.
+
+22) Helm for 500 YAML files:
+   - Helm charts templatize manifests and centralize configuration through values.yaml. You can parameterize repeated resources, package them as a chart, manage versions, and deploy/upgrade with a single command. Helm greatly reduces repetition and complexity.
+
+23) Namespaces for multiple environments:
+   - Create separate Namespaces (dev, test, prod) to isolate resource names, RBAC, quotas, and network policies while sharing the same cluster. They enable logical separation and easier resource management.
+
+24) Expose Frontend, Backend API, Database using Services:
+   - Frontend: Service (ClusterIP) plus Ingress/LoadBalancer for external traffic to frontend.
+   - Backend API: Service (ClusterIP) exposed internally to frontend; optionally a NodePort/LoadBalancer for external API access or routed via Ingress.
+   - Database: Service (ClusterIP) only accessible within cluster; use NetworkPolicies to restrict access to backend pods. For stateful DB use StatefulSet + PVC.
+
+25) Developer deletes a Pod:
+   - Will the app go down? Usually no, if the Pod is managed by a controller (Deployment/ReplicaSet/StatefulSet) — the controller will create a replacement Pod, so the app remains available. If Pod was standalone (not managed), deleting it stops that workload. Controllers maintain desired state.
+
+26) MLflow to track hyperparameters/results:
+   - MLflow Tracking lets you log experiments: parameters, metrics, tags, and artifacts per run. You can compare runs, visualize metrics, and find the best hyperparameters.
+
+27) Which model generated last month’s predictions?
+   - MLflow can answer by querying runs and model versions: check the MLflow Run that produced the batch prediction job (log run_id, model version, and artifacts). If predictions were logged with metadata (timestamp and run_id), you can filter runs by date and retrieve the associated model/artifact/parameters.
+
+28) Compare results from different training runs:
+   - Use the MLflow UI or API to compare runs side-by-side (parameters, metrics, and artifacts). You can plot metric curves, compare confusion matrices, and diff artifacts across runs.
+
+29) Store accuracy graphs, feature importance plots, model files:
+   - Use MLflow’s artifact logging (log_artifact/log_artifacts) to store artifacts like plots and model files. They’re stored in the configured artifact store (S3/GCS/NFS/PV).
+
+30) Model approved for production — Model Registry:
+   - Use MLflow Model Registry to register the model, assign stage labels (Staging, Production), add annotations, set permissions, and track versions. Promote the approved version to "Production" and reference it for deployment.
+
+31) Production model underperforming — MLflow helps:
+   - Inspect historical runs and metrics in MLflow to compare the current model vs prior versions. Check training metrics, data drift, feature distributions (if logged), and recent retraining runs to identify performance regressions.
+
+32) Organize experiments with multiple data scientists:
+   - MLflow organizes experiments as named containers of runs. Each experiment contains multiple runs (with run_id), enabling parallel work and easy comparison. Use tags and nested experiments to structure work.
+
+33) Deploy exact model version from six months ago:
+   - MLflow Model Registry and artifact logging let you retrieve a specific model version (version number or run_id). The model’s artifact URI (e.g., mlflow://... or S3 path) enables reproducible retrieval and deployment.
+
+34) Support auditing / history of model changes:
+   - MLflow Tracking + Model Registry stores runs, parameters, metrics, artifacts, model versions, and stage transitions with timestamps and user actions. This provides an audit trail of model lifecycle events.
+
+35) Reproducible experiments with MLflow:
+   - MLflow logs parameters, environment (conda/requirements), source code (or git commit), artifacts, and metrics. MLflow Projects captures reproducible run definitions; combined they allow rerunning and reproducing experiments.
+
+36) Steps from training to production using MLflow, Docker, and Kubernetes:
+   - Developer writes training code that logs parameters/metrics/artifacts to MLflow Tracking.
+   - Package training code + environment into a Docker image (or MLflow Project).
+   - Launch training as a Kubernetes Job (or use a GPU-enabled Node) which runs the Docker image and logs results to MLflow (central server + artifact store).
+   - Register the best model in MLflow Model Registry.
+   - Build a model-serving Docker image that pulls the registered model (or includes the model artifact).
+   - Deploy the serving container to Kubernetes (Deployment/Service or via an Inference operator).
+   - Use CI/CD to automate build, test, and promote steps (e.g., GitHub Actions, Jenkins).
+   - Monitor metrics and trigger retraining if required.
+
+37) Deploy ML API serving millions:
+   - Docker packages the model-serving app into images; Kubernetes runs those containers across a cluster with scaling: Deployments + Service + Ingress for traffic; HPA (or KEDA) to autoscale pods; Cluster Autoscaler to add nodes. Use load balancers, autoscaling, connection pooling, caching, and GPU/CPU nodes as needed.
+
+38) CI/CD auto-deploy when new model version approved:
+   - CI pipeline watches MLflow Registry (or receives a webhook) when a model transitions to Production. The pipeline pulls the model (or references model URI), builds a serving image (or updates configuration), runs tests, and deploys via kubectl/helm/Argo CD to the cluster, optionally using blue-green or canary rollout strategies.
+
+39) Scaling model-serving containers under heavy traffic:
+   - Use Kubernetes HPA based on CPU/memory or custom metrics (e.g., request latency) via Prometheus Adapter. For event-driven scaling, use KEDA. Also scale nodes with Cluster Autoscaler. Use autoscaling on the serving layer and add caching and a request queue.
+
+40) Model-serving Pod crashes — availability maintained:
+   - Kubernetes controllers (Deployment/ReplicaSet) automatically restart failed Pods and create replacements. Health/readiness checks prevent traffic to unhealthy pods. Use multiple replicas behind a Service so other replicas handle traffic while one restarts.
+
+41) Centralized artifact storage with MLflow + cloud storage:
+   - Configure MLflow artifact store to point to cloud storage (S3, GCS, Azure Blob). MLflow Tracking server uses a backing database (Postgres/MySQL) for metadata and cloud storage for artifacts so all artifacts are centralized and accessible to all components.
+
+42) “It worked locally but not in production” — how Docker prevents it:
+   - Docker ensures identical OS-level libraries and dependency versions via the image. Build the image once and run the same image across environments to avoid “works on my machine” problems.
+
+43) Zero-downtime model updates: use RollingUpdate strategy (Deployments) or more advanced strategies (canary/blue-green) via Argo Rollouts or Istio/Traefik to shift traffic gradually; use readiness probes to ensure new pods receive traffic only when ready.
+
+44) Run MLflow server in Kubernetes — required resources:
+   - Deployment for mlflow server (replicas=1 or more behind a Service).
+   - Service (ClusterIP or LoadBalancer) for access.
+   - PersistentVolumeClaims or external artifact store (S3/GCS) for artifacts.
+   - A backing relational DB (Postgres/MySQL) as a Deployment/StatefulSet with PVCs or managed DB service for MLflow tracking store.
+   - ConfigMaps/Secrets for config and DB credentials.
+   - Ingress for external access, RBAC and NetworkPolicy for security.
+
+45) Architecture for: PostgreSQL, MLflow, Model Serving API, Monitoring:
+   - PostgreSQL: StatefulSet + PVCs (or managed RDS) for MLflow metadata and app DB.
+   - MLflow: Deployment + Service, configured to use PostgreSQL and artifact store (S3/PVC).
+   - Model Serving API: Deployment(s) behind Service/Ingress, autoscaled by HPA/KEDA; pull models from MLflow artifact store or use model cache.
+   - Monitoring: Prometheus + Node Exporter + kube-state-metrics + Grafana + Alertmanager; instrument serving API (Prometheus metrics) and export ML metrics.
+   - CI/CD pipelines build images and deploy via Helm/ArgoCD; logging via Fluentd/Fluent Bit to centralized logs (Elasticsearch/Loki).
+   - Network policies, IAM/Secrets, and TLS for security.
+
+46) Automated retraining when new data arrives:
+   - Use an event-driven pipeline (data ingestion triggers) or scheduled pipeline. New data triggers a Kubernetes Job/Argo Workflow that runs a Dockerized training job and logs runs to MLflow. If improved, the model is registered and promoted via CI/CD.
+
+47) Model consumes excessive CPU — identification and management:
+   - Tools: Prometheus + Grafana for metrics, kubectl top or metrics-server for realtime, kube-state-metrics, and profiling (pprof).
+   - Management: HPA to scale replicas, set resource requests/limits to control scheduling and OOMs, use vertical pod autoscaler (VPA) for recommended resources, and use pod disruption budgets to control restarts.
+
+48) Model rollback capability:
+   - MLflow Registry: keep previous versions; you can select an earlier version and mark it Production.
+   - Kubernetes: perform a rollout undo (kubectl rollout undo deployment/<name>) or redeploy previous image/version via Helm/ArgoCD. Combined, MLflow stores the model version and K8s manages the deployment rollback.
+
+49) Monitor model latency, CPU, memory, request count:
+   - Use Prometheus (exporters or client libraries) to scrape app metrics including latency and request counts; use kube-state-metrics and node exporters for CPU and memory. Visualize in Grafana and alert via Alertmanager. For logs use Loki/ELK and for tracing use Jaeger or OpenTelemetry.
+
+50) End-to-end MLOps platform design (Docker + Kubernetes + MLflow + CI/CD + Monitoring)
+   - Components:
+     - Git repo for code + model serving code; Docker for containerizing training and serving images.
+     - CI/CD (GitHub Actions/GitLab/Jenkins) builds images, runs tests, and automatically pushes images to a registry. CI also triggers deployments (helm/ArgoCD) and can promote models when MLflow registry stage changes.
+     - Kubernetes cluster: run training as Jobs (or use specialized training operators), run MLflow server (Deployment + Service), run PostgreSQL (StatefulSet/PV or managed), and host model-serving Deployments behind Services/Ingress. Use StatefulSets + PVCs for DBs. Use DaemonSets for node-level agents (logging, metrics).
+     - MLflow: central Tracking server with DB and artifact store (S3/GCS/PV), Model Registry for versioning and promotion. Training jobs log runs to MLflow.
+     - Deployment: CI pulls model from MLflow or model URI, builds serving image (or serving can load model dynamically), deploys to Kubernetes via Helm/ArgoCD. Use rolling updates/canary.
+     - Scaling: HPA (CPU/memory/custom metrics), KEDA for event-driven scale, Cluster Autoscaler for nodes.
+     - Monitoring & Observability: Prometheus (metrics), Grafana (dashboards), Alertmanager (alerts), Loki/ELK for logs, Jaeger/OpenTelemetry for tracing, and model-monitoring for data drift and prediction quality (exported metrics).
+     - Rollback & Governance: MLflow Registry for model versions; Helm/ArgoCD or kubectl rollbacks for infra; audit logs in MLflow and CI for provenance.
+   - Flow summary: Data → Training container (K8s Job) → log to MLflow → best model registered → CI builds/validates serving image or triggers config → deploy to K8s (canary/rolling) → traffic routed via Ingress/load balancer → Prometheus collects metrics → alerts trigger autoscaling or retraining pipelines → if regressions, rollback via MLflow + k8s.
+   - Security & Ops: Secrets management, RBAC, network policies, backups for DBs & artifacts, cost control (resource quotas), and autoscaling.
+
+If you want, I can:
+- Provide example docker-compose.yml for Node+Postgres+Redis (Q2).
+- Draft a Dockerfile with multi-stage optimizations (Q3).
+- Produce a sample Kubernetes manifests (Deployment/Service/PVC) including MLflow and Postgres (Q44/45).
+Tell me which example to generate first.
