@@ -198,8 +198,3 @@ Answers (1–50):
    - Flow summary: Data → Training container (K8s Job) → log to MLflow → best model registered → CI builds/validates serving image or triggers config → deploy to K8s (canary/rolling) → traffic routed via Ingress/load balancer → Prometheus collects metrics → alerts trigger autoscaling or retraining pipelines → if regressions, rollback via MLflow + k8s.
    - Security & Ops: Secrets management, RBAC, network policies, backups for DBs & artifacts, cost control (resource quotas), and autoscaling.
 
-If you want, I can:
-- Provide example docker-compose.yml for Node+Postgres+Redis (Q2).
-- Draft a Dockerfile with multi-stage optimizations (Q3).
-- Produce a sample Kubernetes manifests (Deployment/Service/PVC) including MLflow and Postgres (Q44/45).
-Tell me which example to generate first.
