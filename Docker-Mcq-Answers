@@ -1,0 +1,99 @@
+What is Docker primarily used for? — B. Containerization of applications
+
+Which command is used to check the installed Docker version? — B. docker version
+
+What is a Docker image? — B. A template used to create containers
+
+Which command lists all running containers? — C. docker ps
+
+Which command lists all containers, including stopped ones? — A. docker ps -a
+
+What file is used to define instructions for building a Docker image? — B. Dockerfile
+
+Which command builds an image from a Dockerfile? — C. docker build
+
+What does the -t flag do in docker build? — B. Tags the image
+
+Which command is used to download an image from a registry? — C. docker pull
+
+What is the default public registry used by Docker? — B. Docker Hub
+
+Which command starts a new container from an image? — B. docker run
+
+What is the purpose of the EXPOSE instruction in a Dockerfile? — B. Documents container ports
+
+Which command displays Docker system information? — C. docker info
+
+What is the purpose of Docker containers? — A. To run isolated applications
+
+Which command stops a running container? — C. docker stop
+
+Which command removes a container? — B. docker rm
+
+Which instruction sets the base image in a Dockerfile? — C. FROM
+
+What is the purpose of the CMD instruction? — A. Defines default execution command
+
+Which Dockerfile instruction executes commands during image build? — B. RUN
+
+Which command displays available Docker images? — A. docker image ls
+
+What is a Docker volume primarily used for? — B. Persistent storage
+
+Which command creates a Docker volume? — A. docker volume create
+
+What is Docker Compose? — B. Multi-container application management tool
+
+Which file is commonly used by Docker Compose? — B. docker-compose.yml
+
+Which command starts services defined in Docker Compose? — C. docker-compose up
+
+Which command stops and removes Docker Compose services? — B. docker-compose down
+
+What is a Docker network? — B. Communication layer between containers
+
+Which network driver is the default for standalone containers? — C. Bridge
+
+Which command shows Docker networks? — B. docker network ls
+
+What does the -p option in docker run do? — B. Publishes container ports
+
+Which command is used to inspect detailed information about a container? — B. docker inspect
+
+What does docker exec allow you to do? — B. Execute commands inside a running container
+
+Which flag runs a container in detached mode? — B. -d
+
+What does the docker logs command display? — B. Container logs
+
+Which command removes unused Docker objects? — C. docker system prune
+
+What is the purpose of the ENTRYPOINT instruction? — C. Defines executable that always runs
+
+Which command shows image build history? — B. docker history
+
+What is a container registry? — A. Storage for Docker images
+
+Which command uploads an image to a registry? — C. docker push
+
+Which command creates an image from a container? — C. docker commit
+
+Which command saves a Docker image to a tar archive? — B. docker save
+
+Which command loads a Docker image from a tar archive? — C. docker load
+
+What does Docker Swarm provide? — B. Container orchestration
+
+Which command initializes a Docker Swarm? — B. docker swarm init
+
+What is the purpose of a multi-stage build? — B. Reduce final image size
+
+Which Dockerfile instruction sets environment variables? — B. ENV
+
+What is the purpose of .dockerignore? — A. Ignore files during image build context transfer
+
+Which command shows resource usage statistics of containers? — C. docker stats
+
+What does the COPY instruction do? — A. Copies files into the image
+
+Which command removes a Docker image? — C. docker rmi
