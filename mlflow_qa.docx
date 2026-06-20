@@ -1,0 +1,301 @@
+MLflow Quiz: Questions and Answers
+
+1. What is the primary purpose of MLflow?
+A. Container orchestration
+B. Machine learning lifecycle management  <-- Answer: B
+C. Database administration
+D. Web application hosting
+
+2. Which company originally developed MLflow?
+A. Google
+B. Microsoft
+C. Databricks  <-- Answer: C
+D. IBM
+
+3. Which programming language is most commonly associated with MLflow?
+A. Java
+B. Python  <-- Answer: B
+C. C++
+D. Go
+
+4. Which MLflow component is used for experiment tracking?
+A. MLflow Models
+B. MLflow Projects
+C. MLflow Tracking  <-- Answer: C
+D. MLflow Registry
+
+5. What can MLflow Tracking record?
+A. Parameters, metrics, and artifacts  <-- Answer: A
+B. Only metrics
+C. Only datasets
+D. Only model files
+
+6. What is an Experiment in MLflow?
+A. A database table
+B. A collection of related runs  <-- Answer: B
+C. A trained model
+D. A deployment target
+
+7. What is a Run in MLflow?
+A. A deployment instance
+B. A single execution of a machine learning workflow  <-- Answer: B
+C. A Docker container
+D. A database connection
+
+8. Which function starts a new MLflow run?
+A. mlflow.run()
+B. mlflow.start_run()  <-- Answer: B
+C. mlflow.begin_run()
+D. mlflow.track_run()
+
+9. Which method logs a parameter?
+A. mlflow.log_metric()
+B. mlflow.log_artifact()
+C. mlflow.log_param()  <-- Answer: C
+D. mlflow.save_param()
+
+10. Which method logs a metric?
+A. mlflow.log_metric()  <-- Answer: A
+B. mlflow.metric_log()
+C. mlflow.save_metric()
+D. mlflow.record_metric()
+
+11. What is an Artifact in MLflow?
+A. A hyperparameter
+B. An output file produced during a run  <-- Answer: B
+C. A deployment endpoint
+D. A database record
+
+12. Which method logs artifacts?
+A. mlflow.log_artifact()  <-- Answer: A
+B. mlflow.save_artifact()
+C. mlflow.track_artifact()
+D. mlflow.artifact_log()
+
+13. What is the purpose of MLflow Projects?
+A. Model deployment only
+B. Packaging ML code for reproducibility  <-- Answer: B
+C. Logging metrics only
+D. Database integration
+
+14. Which file commonly defines an MLflow Project?
+A. requirements.txt
+B. MLproject  <-- Answer: B
+C. project.yml
+D. mlflow.yaml
+
+15. What is the purpose of MLflow Models?
+A. Version control source code
+B. Standardize model packaging and deployment  <-- Answer: B
+C. Store datasets
+D. Manage containers
+
+16. What is the Model Registry used for?
+A. Tracking experiments
+B. Managing model versions and lifecycle stages  <-- Answer: B
+C. Logging datasets
+D. Running notebooks
+
+17. Which stage is commonly associated with a production-ready model?
+A. Draft
+B. Testing
+C. Production  <-- Answer: C
+D. Archived
+
+18. Which stage is used for evaluating models before production?
+A. Development
+B. Staging  <-- Answer: B
+C. Deployment
+D. Validation
+
+19. Which command starts the MLflow Tracking UI?
+A. mlflow start-ui
+B. mlflow ui  <-- Answer: B
+C. mlflow dashboard
+D. mlflow track-ui
+
+20. By default, on which port does the MLflow UI run?
+A. 5000  <-- Answer: A
+B. 8080
+C. 3306
+D. 9000
+
+21. Which MLflow component manages model lifecycle?
+A. Tracking
+B. Registry  <-- Answer: B
+C. Projects
+D. Artifacts
+
+22. What is a Tracking Server?
+A. Server that stores experiment metadata  <-- Answer: A
+B. Server that hosts notebooks
+C. Server for model inference only
+D. Kubernetes node
+
+23. Which method logs an entire machine learning model?
+A. mlflow.log_model()
+B. mlflow.save_model()
+C. Framework-specific log_model methods  <-- Answer: C
+D. mlflow.track_model()
+
+24. Which MLflow flavor is used for Scikit-learn models?
+A. mlflow.keras
+B. mlflow.pytorch
+C. mlflow.sklearn  <-- Answer: C
+D. mlflow.tensorflowlite
+
+25. Which MLflow flavor supports TensorFlow models?
+A. mlflow.tensorflow  <-- Answer: A
+B. mlflow.tflite
+C. mlflow.deepai
+D. mlflow.neural
+
+26. Which MLflow flavor supports PyTorch models?
+A. mlflow.torchvision
+B. mlflow.pytorch  <-- Answer: B
+C. mlflow.deep-learning
+D. mlflow.neuralnet
+
+27. What is a Model Flavor?
+A. Model deployment region
+B. Framework-specific representation of a model  <-- Answer: B
+C. Dataset format
+D. Hyperparameter configuration
+
+28. What is the purpose of model signatures?
+A. Store source code
+B. Define model inputs and outputs  <-- Answer: B
+C. Encrypt models
+D. Create experiments
+
+29. Which MLflow component improves reproducibility?
+A. Projects  <-- Answer: A
+B. Registry
+C. UI
+D. Stages
+
+30. Which backend database can MLflow use?
+A. MySQL
+B. PostgreSQL
+C. SQLite
+D. All of the above  <-- Answer: D
+
+31. What is a Tracking URI?
+A. Model deployment URL
+B. Location of the MLflow Tracking Server  <-- Answer: B
+C. Database password
+D. Dataset path
+
+32. Which method sets the tracking URI?
+A. mlflow.set_uri()
+B. mlflow.set_tracking_uri()  <-- Answer: B
+C. mlflow.configure_uri()
+D. mlflow.set_server_uri()
+
+33. What is nested run functionality used for?
+A. Multi-model deployment
+B. Organizing related runs hierarchically  <-- Answer: B
+C. Parallel training
+D. Security management
+
+34. Which method is used to set an experiment?
+A. mlflow.create_experiment()
+B. mlflow.set_experiment()  <-- Answer: B
+C. mlflow.select_experiment()
+D. mlflow.use_experiment()
+
+35. What does MLflow autologging provide?
+A. Automatic deployment
+B. Automatic logging of parameters, metrics, and models  <-- Answer: B
+C. Automatic scaling
+D. Automatic dataset generation
+
+36. Which method enables autologging?
+A. mlflow.enable_log()
+B. mlflow.autolog()  <-- Answer: B
+C. mlflow.auto_track()
+D. mlflow.auto_run()
+
+37. What is a registered model?
+A. A deployed model endpoint
+B. A model tracked in the Model Registry  <-- Answer: B
+C. A training dataset
+D. An experiment group
+
+38. Which lifecycle stage typically indicates a retired model?
+A. Staging
+B. Testing
+C. Archived  <-- Answer: C
+D. Production
+
+39. What is the benefit of model versioning?
+A. Improves GPU utilization
+B. Tracks and manages model changes over time  <-- Answer: B
+C. Increases training speed
+D. Reduces dataset size
+
+40. What can MLflow deploy models to?
+A. REST endpoints
+B. Cloud platforms
+C. Local environments
+D. All of the above  <-- Answer: D
+
+41. Which command serves a model locally?
+A. mlflow models serve  <-- Answer: A
+B. mlflow deploy local
+C. mlflow run serve
+D. mlflow endpoint create
+
+42. What is the purpose of the MLmodel file?
+A. Defines model metadata and flavors  <-- Answer: A
+B. Stores training data
+C. Stores logs
+D. Stores experiment metrics
+
+43. Which MLflow feature supports collaboration between teams?
+A. Model Registry  <-- Answer: A
+B. Docker Integration
+C. Notebook Tracking
+D. Hyperparameter Tuning
+
+44. What is a common use case for MLflow Registry?
+A. Source code storage
+B. Managing model promotion workflows  <-- Answer: B
+C. Container management
+D. Dataset versioning only
+
+45. Which cloud platforms commonly integrate with MLflow?
+A. AWS
+B. Azure
+C. Google Cloud
+D. All of the above  <-- Answer: D
+
+46. What is the primary purpose of artifact storage?
+A. Save outputs such as models, plots, and files  <-- Answer: A
+B. Store cluster information
+C. Manage users
+D. Run deployments
+
+47. Which MLflow component is most relevant for experiment comparison?
+A. Tracking  <-- Answer: A
+B. Registry
+C. Projects
+D. Deployment
+
+48. What does MLflow help improve in ML projects?
+A. Reproducibility
+B. Traceability
+C. Collaboration
+D. All of the above  <-- Answer: D
+
+49. Which type of metric can be logged in MLflow?
+A. Accuracy
+B. Loss
+C. Precision
+D. All of the above  <-- Answer: D
+
+50. Which statement best describes MLflow?
+A. A database system
+B. An end-to-end machine learning lifecycle platform  <-- Answer: B
+C. A Kubernetes replacement
+D. A web framework for APIs
